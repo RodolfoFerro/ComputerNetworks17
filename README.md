@@ -5,4 +5,4 @@ Repo personal de la materia de Redes Computacionales 2017, impartida por el [Dr.
 ## Listado de tareas:
 | No. | Tarea                                        | Código                                | Video |
 | --- | -------------------------------------------- | ------------------------------------- | ----- |
-|   1 | Chat bidireccional usando memoria compartida | * [producer.c]() <br>* [consumer.c]() |       |
+|   1 | Chat bidireccional usando memoria compartida | a) [producer.c]() <br>b) [consumer.c]() | [Click aquí](https://drive.google.com/file/d/0B_UdIDqyTHWGaWd0aTFjZDI2SmM/view?usp=sharing)|
