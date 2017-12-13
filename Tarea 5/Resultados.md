@@ -35,7 +35,13 @@ Dichos resultados se encuentran distribuidos en las siguientes tablas:
 
 ### Preguntas
 
-1. Explique el por qué de sus resultados.
-   
-2. ¿Se perdieron paquetes en UDP? ¿Por qué?
-3. ¿Cuál es mejor?
+#### 1. Explique el por qué de sus resultados.
+
+#### 2. ¿Se perdieron paquetes en UDP? ¿Por qué?
+
+#### 3. ¿Cuál es mejor?
+   Depende de lo que se busque como resultado, pues is lo que se requiere es velocidad, UDP resulta ser mejor opción, a costa de perder paquetes. En este sentido, las transferencias TCP tienen razón al ser más tardadas debido a la no pérdidad de paquetes.
+
+
+### Referencias:
+* [TCP vs. UDP](https://es.diffen.com/tecnologia/TCP-vs-UDP)
