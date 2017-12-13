@@ -36,11 +36,13 @@ Dichos resultados se encuentran distribuidos en las siguientes tablas:
 ### Preguntas
 
 #### 1. Explique el por qué de sus resultados.
+Se puede apreciar una mayor velocidad en transferencias UDP en comparación con transferencias TCP. Sin embargo, debe señalarse también la pérdida de paquetes en UDP.
 
 #### 2. ¿Se perdieron paquetes en UDP? ¿Por qué?
+Sí, debido a que el método UDP no se basa en conexiones; es decir, a diferencia de TCP éste método no requiere las funciones de `listen()` y `accept()` por parte del servidor, ni `connect()` por parte del cliente. Esto hace que la transferencia de paquetes sea más rápida (y más liviana), aunque crea una pérdida de confiabilidad, siendo que no se asegura una coexión y paquetes enviados son perdidos.
 
 #### 3. ¿Cuál es mejor?
-   Depende de lo que se busque como resultado, pues is lo que se requiere es velocidad, UDP resulta ser mejor opción, a costa de perder paquetes. En este sentido, las transferencias TCP tienen razón al ser más tardadas debido a la no pérdidad de paquetes.
+Depende de lo que se busque como resultado, pues si lo que se requiere es velocidad, UDP resulta ser mejor opción, a costa de perder información. En este sentido, las transferencias TCP tienen razón de ser más tardadas debido a la no pérdidad de paquetes.
 
 
 ### Referencias:
