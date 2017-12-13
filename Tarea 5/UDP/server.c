@@ -8,101 +8,49 @@
 #include <unistd.h>
 #include <errno.h>
 
-#define MAXLINE 255 /*Longitud máxima de mensaje*/
-
-void lee_clientes(int sock);
-void lee_clientes(int sock){
-  char buffer[MAXLINE], user[MAXLINE];
-  int rc;
-
-  while(1) {
-    // Recibimos usuario y mensaje:
-    bzero(buffer, MAXLINE);
-    bzero(user, MAXLINE);
-    rc = recv(sock, user, MAXLINE, 0);
-    if (rc < 0){
-      printf("Usuario desconectado.\n");
-      exit(1);
-    }
-
-    rc = recv(sock, buffer, MAXLINE, 0);
-    if (rc < 0){
-      printf("Error recibiendo mensaje.\n");
-      exit(1);
-    }
-    if (rc > 0){
-      // Imprimimos mensaje recibido:
-      printf("Usuario %s dice: %s", user, buffer);
-    }
-
-    // Confirmamos de recibido con ECHO:
-    rc = send(sock, buffer, MAXLINE, 0);
-    if (rc <= 0) perror( "Error en send" );
-  }
-
-  return;
-}
+#define PACK_SIZE 1440 /*Tamaño de paquetes*/
+#define BUFFER_SZ 256   /*Tamaño de buffer*/
 
 int main(int argc, char **argv)
 {
-    int sock = 0, connfd = 0;
     struct sockaddr_in serv_addr, cli_addr;
     socklen_t cli_len;
-    int rc, n, status;
-    char buffer[MAXLINE];
-    pid_t pid, wpid;
+    int rc, n, sock = 0;
+    char buffer[BUFFER_SZ];
 
-    // Inicio
+    // Inicio:
     printf("=== SERVER ===\n");
-    printf("Receptor de mensajes.\n");
+    printf("Encargado del envío de paquetes.\n");
+    printf("Paquetes por enviar: 10000.\n");
+    printf("Tamaño de buffer: %d\n", BUFFER_SZ);
 
     // Creamos el socket
-    sock = socket(AF_INET, SOCK_STREAM, 0);
-    memset(&serv_addr, '0', sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+			perror("Problema creando el Socket");
+			exit(1);
+		}
+    serv_addr.sin_family = AF_INET; // IPv4
     serv_addr.sin_port = htons(7500);
+    serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
     rc = bind(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
     if (rc < 0){
       perror("Error en bind");
       exit(1);
     }
-    rc = listen(sock, 5);
-    if (rc < 0){
-      perror("Error en listen");
-      exit(1);
-    }
-    cli_len = sizeof(cli_addr);
 
-    // Obtenemos e imprimimos PID
-    printf("PID: %u\n\n", getpid());
-
-    while(1){
-      // Aceptamos conexión
-      connfd = accept(sock, (struct sockaddr*)&cli_addr, &cli_len);
-      if (connfd < 0){
-        perror("Error al aceptar conexión");
+    // Enviamos paquetes:
+    for (int i=0; i<10000; i++){
+      rc = sendto(sock, buffer, strlen(buffer), 0, (struct sockaddr *)&cli_addr,sizeof(cli_addr));
+      if (rc < 0){
+        perror("Error al enviar paquetes");
         exit(1);
       }
-
-      // Hacemos un fork
-      pid = fork();
-      if (pid == (pid_t)-1){
-        close(connfd);
-        printf("Error en fork(): %s\n", strerror(errno));
-        exit(1);
-      }
-      if (pid == 0){
-        close(sock);
-        lee_clientes(connfd);
-        exit(0);
-      }
-      close(connfd);
     }
+    rc = sendto(sock, NULL, 0, 0, (struct sockaddr *)&cli_addr, sizeof(cli_addr));
 
     // Cerramos socket:
-    close(connfd);
+    close(sock);
     printf("Gracias por usar este servicio.\n");
    	return 0;
 }
