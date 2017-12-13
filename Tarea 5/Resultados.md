@@ -27,3 +27,10 @@ Dichos resultados se encuentran distribuidos en las siguientes tablas:
 | **Tam. buffer** | **Servidor** | **Tiempo de ejecución** | **Megabits/seg** | **Tiempo de ejecución** | **Megabits/seg** | **Paquetes perdidos (PP)** | **PP (%)** |
 | 5000*1024 bytes | *localhost*  | 0.151377 seg            | 93803.343695     | X                       |                  | X                          |            |
 | 5000*1024 bytes | Red local    | X                       |                  | X                       |                  | X                          |            |
+
+
+### Preguntas
+
+1. Explique el por qué de sus resultados.
+2. ¿Se perdieron paquetes en UDP? ¿Por qué?
+3. ¿Cuál es mejor?

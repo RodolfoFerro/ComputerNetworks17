@@ -18,7 +18,10 @@ int sock_client(){
 
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(7500);
-    serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    // Localhost:
+    // serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    // Red local (mi IP):
+    serv_addr.sin_addr.s_addr = inet_addr("192.168.100.7");
 
     // Si sock < 0 hay un error en la creación del socket:
     s = socket( AF_INET, SOCK_STREAM, 0 );
