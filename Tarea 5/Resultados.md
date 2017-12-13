@@ -6,7 +6,7 @@ Los resultados que se presentan a continuación se recopilaron de promediar tres
 2. Envío de **10,000** paquetes de **1440 bytes** con un tamaño de buffer de **32*1024 bytes**.
 3. Envío de **10,000** paquetes de **1440 bytes** con un tamaño de buffer de **5000*1024 bytes**.
 
-<img src="https://github.com/RodolfoFerro/ComputerNetworks/blob/master/Tarea%205/server.png" width="50%"><img src="https://github.com/RodolfoFerro/ComputerNetworks/blob/master/Tarea%205/client.png" width="50%">
+<img src="https://raw.githubusercontent.com/RodolfoFerro/ComputerNetworks17/master/Tarea%205/server.png" width="50%"><img src="https://raw.githubusercontent.com/RodolfoFerro/ComputerNetworks17/master/Tarea%205/client.png" width="50%">
 
 Dichos resultados se encuentran distribuidos en las siguientes tablas:
 
