@@ -15,6 +15,6 @@ Repositorio personal de la materia de Redes Computacionales 2017, impartida por 
 
 # Proyecto final: Internet of Things (IoT) 📡📲
 
-La idea general del proyecto es el uso del [módulo Wi-Fi ESP8266](https://electronilab.co/tienda/nodemcu-board-de-desarrollo-con-esp8266-wifi-y-lua/) para conexión con dispositivos y control de equipo electrónico, en este caso el estado de un LED.
+La idea general del proyecto es el resentar en general lo que es IoT, pasando por un contexto histórico, aplicaciones y casos reales de uso; concluyendo con el desarrollo de un proyecto utilizando del [módulo Wi-Fi ESP8266](https://electronilab.co/tienda/nodemcu-board-de-desarrollo-con-esp8266-wifi-y-lua/) para conexión con dispositivos y control de equipo electrónico, en este caso el estado de un LED.
 
 El contenido completo y a detalle del proyecto se encuentra en la carpeta [Proyecto Final](https://github.com/RodolfoFerro/ComputerNetworks17/tree/master/Proyecto%20Final).

@@ -1,6 +1,6 @@
 # Proyecto final: Internet of Things (IoT) 📡📲
 
-La idea general del proyecto es el uso del [módulo Wi-Fi ESP8266](https://electronilab.co/tienda/nodemcu-board-de-desarrollo-con-esp8266-wifi-y-lua/) para conexión con dispositivos y control de equipo electrónico, en este caso el estado de un LED.
+La idea general del proyecto es el resentar en general lo que es IoT, pasando por un contexto histórico, aplicaciones y casos reales de uso; concluyendo con el desarrollo de un proyecto utilizando del [módulo Wi-Fi ESP8266](https://electronilab.co/tienda/nodemcu-board-de-desarrollo-con-esp8266-wifi-y-lua/) para conexión con dispositivos y control de equipo electrónico, en este caso el estado de un LED.
 
 La presente carpeta contiene una serie de scripts desarrollados para la presentación del proyecto final del curso. Dichos scripts son básicamente dos tipos de archivos: scripts de Arduino (`.ino`) y scripts de Python (`.py`).
 
