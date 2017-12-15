@@ -11,6 +11,7 @@ Para la programación del circuito, se utilizó directamente el [IDE de Arduino]
 ### Diagrama del circuito
 
 Un diagrama del circuito se muestra aproximación:
+
 <img src="https://raw.githubusercontent.com/RodolfoFerro/ComputerNetworks17/master/Proyecto%20Final/imgs/sketch_1.jpg" width="45%">
 
 Como puede apreciarse, el módulo ESP8266 queda sobre una protoboard y el LED queda conectado al pin D7 (que es mapeado al 13 desde la parte programática) y al pin de tierra (GRD).
