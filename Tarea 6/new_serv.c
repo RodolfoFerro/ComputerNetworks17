@@ -25,11 +25,6 @@ int sock_server(){
       exit(1);
     }
 
-    // If socket in use:
-    int enable = 1;
-    if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
-        perror("setsockopt(SO_REUSEADDR) failed");
-
     // Bind del servidor al cliente:
     rc = bind(s, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
     if (rc < 0){
@@ -57,11 +52,10 @@ pid_t create_child(){
   return pid;
 }
 
-void send_file(int s, char * filename){
+void send_file(int s, FILE *fp, char * filename){
     // Enviamos archivo:
     char buffer[BUFFER_SZ];
     int rc;
-    FILE *fp;
     fp = fopen(filename, "r");
 
     while (!feof(fp)){
@@ -69,7 +63,6 @@ void send_file(int s, char * filename){
       rc = write(s, buffer, BUFFER_SZ);
       bzero(buffer, BUFFER_SZ);
     }
-    fclose(fp);
 
     printf("The file was sent successfully!\n\n");
     return;
@@ -111,20 +104,17 @@ int main(int argc, char **argv)
               exit(1);
             }
 
-            opt = (int) buffer[0];
-            printf("Opción recibida: %d\n", opt);
+            opt = buffer[0];
+            printf("Opción recibida: %c\n", opt);
+            switch (opt) {
+              case '1':
+                send_file(s, fp, "test.txt");
+                break;
 
-            if (opt == 49) {
-      				send_file(sock, "test.txt");
-      				break;
-      			}
-      			if (opt == 50) {
-              recv(s, &buffer, BUFFER_SZ, 0);
-      				system(buffer);
-      			}
-      			if (opt == 51) {
-      				break;
-      			}
+      				default:
+      					printf("HERE!\n");
+                break;
+            }
           }
         }
     }

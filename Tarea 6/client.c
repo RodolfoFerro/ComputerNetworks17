@@ -8,74 +8,93 @@
 #include <unistd.h>
 #include <errno.h>
 
-#define MAXLINE 255 /*Longitud máxima de mensaje*/
+#define BUFFER_SZ 256   /*Tamaño de buffer*/
+
+int sock_client(){
+	  struct sockaddr_in serv_addr;
+    int s, rc;
+
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(7500);
+    serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+
+    // Si sock < 0 hay un error en la creación del socket:
+    s = socket( AF_INET, SOCK_STREAM, 0 );
+    if (s < 0){
+      perror("Problema creando el socket");
+      exit(1);
+    }
+
+    // Conexión del cliente al servidor:
+    rc = connect(s, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
+    if (rc){
+      perror("Problema al intentar la conexión con el servidor");
+      exit(1);
+    }
+
+    return s;
+}
+
+void recv_file(int sock, char *filename){
+		// Recibimos paquetes:
+    char buffer[BUFFER_SZ];
+		int rc;
+		FILE *f;
+		f = fopen(filename, "w");
+
+		rc = recv(sock, buffer, sizeof(buffer), 0);
+		while (rc){
+			fprintf(f, "%s", buffer);
+			bzero(buffer, BUFFER_SZ);
+			rc = read(sock, buffer, BUFFER_SZ);
+		}
+		fclose(f);
+
+		printf("The file was received successfully!\n\n");
+}
 
 int main(int argc, char **argv)
 {
-    int sock = 0, connfd = 0;
-    struct sockaddr_in serv_addr;
-    int rc, n;
-    char buffer[MAXLINE];
+    int sock = 0, rc, n = 0;
+		char opt;
+    char buffer[BUFFER_SZ];
+		char filename[BUFFER_SZ];
+    FILE *f;
 
     // Inicio
     printf("=== CLIENT ===\n");
-    printf("Creador de mensajes.\n");
+    printf("Receptor de archivos.\n");
 
-    // Obtenemos tty para crear usuario
-    char *tty = ttyname(STDIN_FILENO);
-    char *user;
-    user = &tty[9];
-    // int user = 100*(tty[9] - '0') + 10*(tty[10] - '0') + (tty[11] - '0');
-    printf("Usuario %s.\n\n", user);
 
-    // Si sock < 0 hay un error en la creación del socket:
-		if ((sock = socket(AF_INET, SOCK_STREAM, 0)) <0) {
-			perror("Problema creando el Socket");
-			exit(2);
+    // Creamos el socket:
+		sock = sock_client();
+		printf("Menu:  \n");
+		printf("1. Desargar archivo \n");
+		printf("2. Introducir comando del sistema \n");
+		printf("3. Salir \n\n");
+
+    // Ciclo de control:
+		while (1) {
+			printf("Opción: ");
+			scanf("%c", &opt);
+			rc = send(sock, &opt, 1, 0);
+
+			opt = (int) opt;
+			if (opt == 49) {
+				recv_file(sock, "new.txt");
+				break;
+			}
+			if (opt == 50) {
+				printf("Inroduce comando: \n");
+				scanf("%s", &buffer);
+				// printf("%s\n", buffer);
+				send(sock, buffer, BUFFER_SZ, 0);
+				system(buffer);
+			}
+			if (opt == 51) {
+				break;
+			}
 		}
-
-    // Creación del socket
-  	memset(&serv_addr, 0, sizeof(serv_addr));
-  	serv_addr.sin_family = AF_INET;
-  	serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-  	serv_addr.sin_port = htons(7500);
-
-    // Conexión del clinte al servidor:
-		if (connect(sock, (struct sockaddr *) &serv_addr, sizeof(serv_addr))<0){
-			perror("Problema al intentar la conexión con el servidor");
-			exit(3);
-		}
-    
-    // Ciclo para leer texto:
-    while (1) {
-      // Limpiamos y escribimos un mensaje:
-      bzero(buffer, MAXLINE);
-      printf("Introduce un mensaje: ");
-      fgets(buffer, MAXLINE, stdin);
-
-      // Enviamos usuario y mensaje:
-      rc = send(sock, user, MAXLINE, 0);
-      rc = send(sock, buffer, MAXLINE, 0);
-      if (rc <= 0) perror( "Error en send" );
-
-      // Si escribimos 'EXIT', salimos:
-      if (strcmp(buffer, "EXIT\n") == 0) {
-        printf("¡Hasta luego!\n");
-        break;
-      }
-
-      // Recibimos respuesta del servidor:
-      bzero(buffer, MAXLINE);
-      rc = recv(sock, buffer, MAXLINE, 0);
-      if (rc < 0){
-        printf("Error leyendo buffer.\n");
-        exit(1);
-      }
-      if (rc > 0){
-        // Imprimimos mensaje recibido:
-        printf("ECHO: %s\n", buffer);
-      }
-    }
 
     // Cerramos socket:
 		close(sock);
