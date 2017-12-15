@@ -1,8 +1,8 @@
 # Proyecto final: Internet of Things (IoT) 📡📲
 
-La presente carpeta contiene una serie de scripts desarrollados para la presentación del proyecto final del curso. Dichos scripts son básicamente dos tipos de archivos: scripts de Arduino (`.ino`) y scripts de Python (`.py`).
-
 La idea general del proyecto es el uso del [módulo Wi-Fi ESP8266](https://electronilab.co/tienda/nodemcu-board-de-desarrollo-con-esp8266-wifi-y-lua/) para conexión con dispositivos y control de equipo electrónico, en este caso el estado de un LED.
+
+La presente carpeta contiene una serie de scripts desarrollados para la presentación del proyecto final del curso. Dichos scripts son básicamente dos tipos de archivos: scripts de Arduino (`.ino`) y scripts de Python (`.py`).
 
 ## Programación del módulo WiFi
 

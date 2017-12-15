@@ -13,6 +13,8 @@ Repositorio personal de la materia de Redes Computacionales 2017, impartida por 
 |   5 | *Comparativa* `TCP`/`UDP` *en transferencia de paquetes* | a) [**TCP**](https://github.com/RodolfoFerro/ComputerNetworks17/tree/master/Tarea%205/TCP) <br>b) [**UDP**](https://github.com/RodolfoFerro/ComputerNetworks17/tree/master/Tarea%205/UDP) | [Tabla de resultados](https://github.com/RodolfoFerro/ComputerNetworks17/blob/master/Tarea%205/Resultados.md) |
 |   6 | *Transferencia de archivos robusta*                      |
 
-## Proyecto final:
+# Proyecto final: Internet of Things (IoT) 📡📲
 
-Internet of Things (IoT).
+La idea general del proyecto es el uso del [módulo Wi-Fi ESP8266](https://electronilab.co/tienda/nodemcu-board-de-desarrollo-con-esp8266-wifi-y-lua/) para conexión con dispositivos y control de equipo electrónico, en este caso el estado de un LED.
+
+El contenido completo y a detalle del proyecto se encuentra en la carpeta [Proyecto Final](https://github.com/RodolfoFerro/ComputerNetworks17/tree/master/Proyecto%20Final).
