@@ -14,11 +14,8 @@
 from flask_ask import Ask, statement, question, session
 from turn_light import parser, turn_ligth
 from flask import Flask
-import unidecode
 import requests
 import logging
-import json
-import time
 
 # Set global variables
 name = 'Rodolfo'
