@@ -24,7 +24,7 @@ Los scripts de Arduino están contenidos cada uno en su respectiva carpeta y son
 
 El segundo código –*el principal*– imprime la dirección IP que contiene el estado del LED y controles para cambiarlo, como se muestra en las siguienes imágenes, que son capturas de pantalla del navegador en la dirección ya mencionada:
 
-<img src="https://raw.githubusercontent.com/RodolfoFerro/ComputerNetworks17/master/Proyecto%20Final/imgs/off.jpg" width="50%"><img src="https://raw.githubusercontent.com/RodolfoFerro/ComputerNetworks17/master/Proyecto%20Final/imgs/on.jpg" width="50%">
+<img src="https://raw.githubusercontent.com/RodolfoFerro/ComputerNetworks17/master/Proyecto%20Final/imgs/off.png" width="50%"><img src="https://raw.githubusercontent.com/RodolfoFerro/ComputerNetworks17/master/Proyecto%20Final/imgs/on.png" width="50%">
 
 Cabe mencionarse que ambos códigos del circuito se encuentran comentados para una mejor comprensión.
 
