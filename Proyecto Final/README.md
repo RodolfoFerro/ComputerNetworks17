@@ -29,9 +29,9 @@ El segundo código –*el principal*– imprime la dirección IP en la consola `
 
 Cabe mencionarse que ambos códigos del circuito se encuentran comentados para una mejor comprensión.
 
-## Integración automatizada (*IoT style!*)
+## Integración inteligente (*IoT style!*)
 
-Por su parte, los scripts de Python permiten automatizar o aproximar de una manera distinta el control del estado del LED, digamos de una manera más estilo IoT.
+Por su parte, los scripts de Python permiten aproximar de una manera distinta ––*e inteligente*–– el control del estado del LED, digamos de una manera más estilo IoT.
 
 
 ### Requerimientos
@@ -112,14 +112,22 @@ ngrok http 5000
 
 Esto abre el túnel creando un enlace seguro (http**s**) parecido a este: `https://xxxxxxxx.ngrok.io`. Dicho enlace es el que se pasará al portal de desarrolladores de Amazon.
 
-### Probando el bot de Telegram y la Skill de Alexa
+## Probando la integración inteligente
+
+Ya que se cuenta con todo el desarrollo hasta este punto, pueden probarse los scripts de integración inteligente.
 
 #### Telegram bot:
 Cuando el bot de Telegram se encuentre corriendo, puede iniciarse con el comando `/start`. Este arrojará un texto con dos botones para poder controlar el estado del LED.
 
-Para reiniciar el bot (tras haber modificado el estado del LED) basta volver al usar el mismo comando de nuevo, `/start`.
+Para reiniciar el bot (tras haber modificado el estado del LED) basta volver al usar el mismo comando, `/start`.
 
 #### Alexa Skill:
 Ya que la Alexa Skill se encuentra en línea, puede probarse directamente con los dispositivos [Echo](https://www.amazon.com/dp/B01DFKC2SO/ref=ods_xs_dp_oop) de Amazon (Dot, Plus, etc.) o utilizando el servicio de [Echosim.io](https://echosim.io/).
 
+El comando para invocar al bot es:
+> ––*Alexa, open Light Turner, please.*
+
+Tras ello, sólo basta resonder si queremos cambiar el estado del LED.
+
+### DEMO
 Un demo del funcionamiento puede ser encontrado en el siguiente video:
