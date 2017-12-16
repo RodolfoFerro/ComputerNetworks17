@@ -20,10 +20,10 @@ Como puede apreciarse, el módulo ESP8266 queda sobre una protoboard y el LED qu
 
 Los scripts de Arduino están contenidos cada uno en su respectiva carpeta y son los siguientes:
 - [`Light_Test.ino`](https://github.com/RodolfoFerro/ComputerNetworks17/blob/master/Proyecto%20Final/Arduino/Light_Test/Light_Test.ino) es un script de prueba para encender y apagar el LED de manera intermitente y comprobar la conexión correcta del circuito y la carga del programa al módulo.
-- [`WiFi_Light.ino`](https://github.com/RodolfoFerro/ComputerNetworks17/blob/master/Proyecto%20Final/Arduino/Light_Test/Light_Test.ino) es un script que carga el código principal de conexión vía WiFi para controlar el estado del LED (encendido/apagado). **En este script es importante camiar el ssid por el nombre de la red y la contraseña por la contraseña de la misma, si no, el módulo no podrá conectarse para realizar el enío de datos.**
+- [`WiFi_Light.ino`](https://github.com/RodolfoFerro/ComputerNetworks17/blob/master/Proyecto%20Final/Arduino/Wifi_Light/WiFi_Light.ino) es un script que carga el código principal de conexión vía WiFi para controlar el estado del LED (encendido/apagado). **En este script es importante camiar el ssid por el nombre de la red y la contraseña por la contraseña de la misma, si no, el módulo no podrá conectarse para realizar el enío de datos.**
 
 
-El segundo código –*el principal*– imprime la dirección IP que contiene el estado del LED y controles para cambiarlo, como se muestra en las siguienes imágenes, que son capturas de pantalla del navegador en la dirección ya mencionada:
+El segundo código –*el principal*– imprime la dirección IP en la consola `COMXX` (donde `XX` es el puerto al que se conectó el módulo), que contiene el estado del LED y controles para cambiarlo, como se muestra en las siguienes imágenes, que son capturas de pantalla del navegador en la dirección ya mencionada:
 
 <img src="https://raw.githubusercontent.com/RodolfoFerro/ComputerNetworks17/master/Proyecto%20Final/imgs/off.png" width="50%"><img src="https://raw.githubusercontent.com/RodolfoFerro/ComputerNetworks17/master/Proyecto%20Final/imgs/on.png" width="50%">
 
@@ -41,6 +41,7 @@ Además de [Python 3.6](https://www.python.org/downloads/) (que es la versión q
 - [Requests](http://docs.python-requests.org/en/master/), para el envío de peticiones GET.
 - [Flask](http://flask.pocoo.org/), para la creación del servidor web de peticiones.
 - [Flask-ask](http://flask-ask.readthedocs.io/en/latest/), que es una [extensión de Flask](http://flask.pocoo.org/extensions/) para el manejo de peticiones de Amazon Alexa.
+- [Python-telegram-bot](https://python-telegram-bot.org/), para la creación del bot de Telegram.
 
 La ventaja de todos estos paquetes es que son fácilmente instalables con [`pip`](https://pip.pypa.io/en/stable/), que es un gestor de paquetes de Python.
 
@@ -54,17 +55,22 @@ Peeero... He creado un archivo de requermientos ([`requirements.txt`](https://gi
 pip install -r requirements.txt
 ```
 
-Además de esto, para poder subir la Alexa Skill al portal de Amazon, es decir, hacerl el deployment y poder probar la aplicación desde un dispositivo con Alexa, será necesario descargar [ngrok](https://ngrok.com/) y [crear una Alexa Skill en el portal de Amazon](https://developer.amazon.com/docs/custom-skills/deploy-a-sample-skill-to-aws-lambda.html).
+Además de esto, se requerirá un par de cosas extra:
+* Para poder tener acceso a las funcionalidades del bot de Telegram, debe primero crearse un bot. Para ello, hay que hacer la solicitud a [BotFather](https://t.me/BotFather).
+* Para poder subir la Alexa Skill al portal de Amazon, es decir, hacer el deployment y poder probar la aplicación desde un dispositivo con Alexa, será necesario descargar [ngrok](https://ngrok.com/) y [crear una Alexa Skill en el portal de Amazon](https://developer.amazon.com/docs/custom-skills/deploy-a-sample-skill-to-aws-lambda.html).
 
 ### Scripts de Python
 
 Los scripts de Python contenidos en esta parte son los siguientes:
 
 - [`turn_light.py`](https://github.com/RodolfoFerro/ComputerNetworks17/blob/master/Proyecto%20Final/Python/turn_light.py) es un script que envía una petición GET al url que se especifica al momento de correr el programa, junto con el estado, para a través de peticiones desde terminal tener un control sobre el estado del LED.
-- [`alexa_skill.py`](https://github.com/RodolfoFerro/ComputerNetworks17/blob/master/Proyecto%20Final/Python/turn_light.py) es el script con la Alexa Skill para controlar el estado del LED utilizando Amazon Alexa.
+- [`telegram_bot.py`](https://github.com/RodolfoFerro/ComputerNetworks17/blob/master/Proyecto%20Final/Python/telegram_bot.py) es el script con el bot de Telegram para controlar el estado del LED. Es necesario tener el token del API en un archivo `credentials.py`.
+- [`alexa_skill.py`](https://github.com/RodolfoFerro/ComputerNetworks17/blob/master/Proyecto%20Final/Python/alexa_skill.py) es el script con la Alexa Skill para controlar el estado del LED utilizando Amazon Alexa.
 
 
-El primer script se corre de la siguiente manera:
+#### HTTP Requests (GET):
+
+El primer script, [`turn_light.py`](https://github.com/RodolfoFerro/ComputerNetworks17/blob/master/Proyecto%20Final/Python/turn_light.py), se corre de la siguiente manera:
 
 ```bash
 python turn_light.py -u "http://192.168.x.x/" -s STATE
@@ -73,16 +79,29 @@ Donde `STATE` es el estado al que queremos cambiar el LED, digamos `ON`/`OFF` y 
 
 Este script controla, como ya se mencionó, el estado del LED desde la terminal.
 
-El segundo script hace mancuerna con [ngrok](https://ngrok.com/), que es una aplicación para abrir túneles seguros al *localhost*.
 
-Para la parte del segundo script, se requerirán dos tabs/ventanas de la terminal, una para el servidor Flask que manipula la interacción con la aplicación de Alexa y la otra para crear el túnel que se sube al portal de desarrolladores de Amazon.
+#### Telegram bot:
 
-Para correr el segundo script en la primer ventana hacemos lo siguiente:
+El segundo script, [`telegram_bot.py`](https://github.com/RodolfoFerro/ComputerNetworks17/blob/master/Proyecto%20Final/Python/telegram_bot.py), requiere tener un script `credentials.py`con el token del API que devuelve  [BotFather](https://t.me/BotFather). Con ello, la manera de correr el bot es la siguiente:
+```bash
+python telegram_bot.py -u "http://192.168.x.x/"
+```
+
+Donde debe ponerse la dirección IP real obtenida por el dispositivo en la consola del IDE de Arduino.
+
+
+#### Alexa Skill:
+
+El tercer script, [`alexa_skill.py`](https://github.com/RodolfoFerro/ComputerNetworks17/blob/master/Proyecto%20Final/Python/alexa_skill.py), hace mancuerna con [ngrok](https://ngrok.com/), que es una aplicación para abrir túneles seguros al *localhost*.
+
+Para el tercer script, se requerirán dos tabs/ventanas de la terminal, una para el servidor Flask que manipula la interacción con la aplicación de Alexa y la otra para crear el túnel que se sube al [portal de desarrolladores de Amazon](https://developer.amazon.com/).
+
+Para correr el tercer script en la primer ventana hacemos lo siguiente:
 ```bash
 python alexa_skill.py -u "http://192.168.x.x/"
 ```
 
-Donde debe ponerse la dirección IP real obtenida por el dispositivo en la consola COM del IDE de Arduino.
+Donde debe ponerse la dirección IP real obtenida por el dispositivo en la consola del IDE de Arduino.
 
 En la segunda ventana corremos ngrok abriendo el puerto 5000 del *localhost* (que es el default de Flask) como sigue:
 ```bash
@@ -93,8 +112,14 @@ ngrok http 5000
 
 Esto abre el túnel creando un enlace seguro (http**s**) parecido a este: `https://xxxxxxxx.ngrok.io`. Dicho enlace es el que se pasará al portal de desarrolladores de Amazon.
 
-### Probando el Skill de Alexa
+### Probando el bot de Telegram y la Skill de Alexa
 
-Ya que el Alexa Skill se encunetra en línea, puede probarse directamente con los dispositivos [Echo](https://www.amazon.com/dp/B01DFKC2SO/ref=ods_xs_dp_oop) de Amazon (Dot, Plus, etc.) o utilizando el servicio de [Echosim.io](https://echosim.io/).
+#### Telegram bot:
+Cuando el bot de Telegram se encuentre corriendo, puede iniciarse con el comando `/start`. Este arrojará un texto con dos botones para poder controlar el estado del LED.
+
+Para reiniciar el bot (tras haber modificado el estado del LED) basta volver al usar el mismo comando de nuevo, `/start`.
+
+#### Alexa Skill:
+Ya que la Alexa Skill se encuentra en línea, puede probarse directamente con los dispositivos [Echo](https://www.amazon.com/dp/B01DFKC2SO/ref=ods_xs_dp_oop) de Amazon (Dot, Plus, etc.) o utilizando el servicio de [Echosim.io](https://echosim.io/).
 
 Un demo del funcionamiento puede ser encontrado en el siguiente video:
