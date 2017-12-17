@@ -1,140 +1,218 @@
 #include <sys/socket.h>
-#include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 #include <errno.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <dirent.h>
 
-#define BUFFER_SZ 256   /*Tamaño de buffer*/
+#define MAXLINE 255 /*Longitud máxima de mensaje*/
 
-int sock_server(){
+int main(int argc, char *argv[])
+{
+    int listenfd = 0, connfd = 0;
     struct sockaddr_in serv_addr;
-    int s, rc;
+	  int rc, n, nl;
+    char buffer[MAXLINE];
+    char buff[MAXLINE];
+    char line[MAXLINE];
+    FILE *ptr_file;
+    struct dirent **namelist;
+    char *list;
+    char cwd[MAXLINE];
+    char new_path[MAXLINE];
+    char dir[MAXLINE];
+    pid_t cpid, w;
+    int status;
+
+    // Creación del socket
+    listenfd = socket(AF_INET, SOCK_STREAM, 0);
+    memset(&serv_addr, '0', sizeof(serv_addr));
 
     serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(7500);
     serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    serv_addr.sin_port = htons(7500);
 
-    // Si sock < 0 hay un error en la creación del socket:
-    s = socket(AF_INET, SOCK_STREAM, 0);
-    if (s < 0){
-      perror("Problema creando el socket");
-      exit(1);
-    }
-
-    // If socket in use:
-    int enable = 1;
-    if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
-        perror("setsockopt(SO_REUSEADDR) failed");
-
-    // Bind del servidor al cliente:
-    rc = bind(s, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
-    if (rc < 0){
-      perror("Problema en bind");
-      exit(1);
-    }
-
-    // Listen al cliente:
-    rc = listen(s, 5);
-    if (rc){
-      perror("Problema en listen");
-      exit(1);
-    }
-
-    return s;
-}
-
-pid_t create_child(){
-	pid_t pid;
-  pid = fork();
-  if (pid == (pid_t)-1){
-      perror("Error en child");
-      exit(1);
-  }
-  return pid;
-}
-
-void send_file(int s, char * filename){
-    // Enviamos archivo:
-    char buffer[BUFFER_SZ];
-    int rc;
-    FILE *fp;
-    fp = fopen(filename, "r");
-
-    while (!feof(fp)){
-      fscanf(fp, "%s", buffer);
-      rc = write(s, buffer, BUFFER_SZ);
-      bzero(buffer, BUFFER_SZ);
-    }
-    fclose(fp);
-
-    printf("The file was sent successfully!\n\n");
-    return;
-}
-
-int main(int argc, char **argv)
-{
-    int sock = 0, s, rc;
-    char opt;
-    char buffer[BUFFER_SZ];
-		char filename[BUFFER_SZ];
-    FILE *fp;
-    pid_t child;
+    bind(listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
+    listen(listenfd, 10);
 
     // Inicio:
     printf("=== SERVER ===\n");
-    printf("Encargado del envío de archivos.\n");
+    printf("Encargado de la atención de peticiones.\n");
 
-    // Creamos el socket:
-    sock = sock_server();
+    // Obtenemos directorio donde estamos:
+    if (getcwd(cwd, sizeof(cwd)) == NULL)
+        perror("ERROR al obtener directorio");
+    strcpy(dir, cwd);
 
-    // Ciclo de control:
-    while (1){
-        // Aceptamos conexiones:
-        s = accept(sock, NULL, NULL);
-        if (s < 0){
-          perror("Problema aceptando conexión");
-          exit(1);
+    while(1)
+    {
+        // Aceptamos conexión:
+        connfd = accept(listenfd, (struct sockaddr*)NULL, NULL);
+        if (connfd < 0) {
+            perror("ERROR al aceptar");
+            exit(1);
         }
 
-        // Hacemos fork:
-        child = create_child();
+        // Creamos un subproceso:
+        if ((cpid = fork()) == 0){
+            // Leemos a través del socket:
+            bzero(buffer, MAXLINE);
+            n = read(connfd, buffer, MAXLINE);
+            if (n < 0) {
+                perror("ERROR al leer del socket");
+                exit(1);
+            }
+            printf("Request: %s", buffer);
+    				bzero(line, MAXLINE);
+    				strcpy(line, &buffer[0]);
+    				line[3] = '\0';
 
-        if (child == 0){
-          while (1) {
-            rc = recv(s, &buffer, 1, 0);
-            if(rc < 0) {
-              perror("Error recibiendo opción");
-              exit(1);
+            // Si recibimos 'exit', salimos:
+        		if (strcmp(buffer, "exit\n") == 0){
+        		    break;
+        		}
+
+            // Si recibimos "ls" - Mostrar listado de archivos:
+            if (strcmp(buffer, "ls\n") == 0){
+                nl = scandir(dir, &namelist, 0, alphasort);
+                if (nl < 0)
+                    perror("Error al escanear contenido de directorio");
+                else{
+                    for (int i = 0; i < nl; i++){
+                        list = namelist[i]->d_name;
+                        strcat(list, "\n");
+                        rc = write(connfd, list, strlen(list));
+                        if(rc<=0) perror("ERROR al imprimir ls");
+                    }
+                    for (int i = 0; i < nl; i++){
+                        free(namelist[i]);
+                    }
+                    free(namelist);
+                }
             }
 
-            opt = (int) buffer[0];
-            printf("Opción recibida: %d\n", opt);
+            // Si recibimos "here" - Mostramos directorio actual:
+            else if (strcmp(buffer, "here\n") == 0){
+                n = write(connfd, dir, strlen(dir));
+                if (n < 0) {
+                    perror("ERROR al enviar al socket");
+                    exit(4);
+                }
+        		}
 
-            if (opt == 49) {
-      				send_file(sock, "test.txt");
-      				break;
-      			}
-      			if (opt == 50) {
-              recv(s, &buffer, BUFFER_SZ, 0);
-      				system(buffer);
-      			}
-      			if (opt == 51) {
-      				break;
-      			}
-          }
+            // Si recibimos "get" - Descargamos archivo del directorio actual:
+            else if (strncmp(buffer, "get", 3) == 0){
+              // Abrimos archivo seleccionado:
+              bzero(buff, MAXLINE);
+              strcpy(buff, &(buffer[4]));
+              buff[strlen(buff) - 1] = '\0';
+              ptr_file = fopen(buff, "r");
+              if (ptr_file == NULL){
+                  if (errno == 2){
+                      n = write(connfd, "No existe ese archivo. :(", strlen("No existe ese archivo. :("));
+                      if (n < 0) {
+                          perror("ERROR al enviar al socket.");
+                          exit(4);
+                      }
+                  }
+                  else{
+                      n = write(connfd, "Archivo en uso, intente después.", strlen("Archivo en uso, intente después."));
+                      if (n < 0) {
+                          perror("ERROR al enviar al socket.");
+                          exit(4);
+                      }
+                  }
+                  fclose(ptr_file);
+              }
+              else{
+                  // Avisamos qué archivo abrimos:
+                  // printf("Opening file: %s\n", buff);
+                  n = write(connfd, buff, strlen(buff));
+                  if (n < 0) {
+                      perror("ERROR al enviar al socket.");
+                      exit(4);
+                  }
+                  while (fgets(buff, MAXLINE, ptr_file) != NULL){
+                      n = write(connfd, buff, strlen(buff));
+                      if (n < 0) {
+                          perror("ERROR al enviar al socket.");
+                          exit(4);
+                      }
+                  }
+                  fclose(ptr_file);
+              }
+        		}
+
+            // Si recibimos "cd dir" - Cambiamos directorio:
+            else if (strcmp(line, "cd ") == 0){
+    				    // bzero(new_path,MAXLINE);
+    						// strcat(new_path, &(buffer[3]));
+                // new_path[strlen(new_path) - 1] = '\0';
+                // setPath(dir, new_path);
+                chdir(&(buffer[3]));
+                chroot(&(buffer[3]));
+                if (getcwd(cwd, sizeof(cwd)) == NULL)
+                    perror("ERROR al obtener directorio");
+                strcpy(dir, cwd);
+    						n = write(connfd, dir, strlen(dir));
+    						if (n < 0) {
+    					      perror("ERROR al enviar al socket.");
+    					      exit(4);
+    					  }
+                printf("New dir: %s", dir);
+        		}
+
+            // Si recibimos "more" - Abrimos archivo:
+            else if (strncmp(buffer, "more", 4) == 0){
+                // Abrimos archivo seleccionado:
+                bzero(buff, MAXLINE);
+                strcpy(buff, &(buffer[5]));
+                buff[strlen(buff) - 1] = '\0';
+                ptr_file = fopen(buff, "r");
+                if (ptr_file == NULL){
+                    if (errno == 2){
+                        n = write(connfd, "No existe ese archivo. :(", strlen("No existe ese archivo. :("));
+                        if (n < 0) {
+            					      perror("ERROR al enviar al socket.");
+            					      exit(4);
+            					  }
+                    }
+                    else{
+                        n = write(connfd, "Archivo en uso, intente después.", strlen("Archivo en uso, intente después."));
+                        if (n < 0) {
+                            perror("ERROR al enviar al socket.");
+                            exit(4);
+                        }
+                    }
+                    fclose(ptr_file);
+                }
+                else{
+                    // Avisamos qué archivo abrimos:
+                    // printf("Opening file: %s\n", buff);
+                    n = write(connfd, buff, strlen(buff));
+                    if (n < 0) {
+        					      perror("ERROR al enviar al socket.");
+        					      exit(4);
+        					  }
+                    while (fgets(buff, MAXLINE, ptr_file) != NULL){
+                        n = write(connfd, buff, strlen(buff));
+                        if (n < 0) {
+            					      perror("ERROR al enviar al socket.");
+            					      exit(4);
+            					  }
+                    }
+                    fclose(ptr_file);
+                }
+        		}
         }
-    }
 
-
-
-    // Cerramos socket:
-    fclose(fp);
-    close(sock);
-    printf("Gracias por usar este servicio.\n");
-    // system("ls");
-   	return 0;
+        // Proceso padre:
+        close(connfd);
+        sleep(1);
+     }
 }

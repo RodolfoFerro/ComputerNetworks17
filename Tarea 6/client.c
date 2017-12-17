@@ -1,103 +1,166 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <netinet/in.h>
+#include <resolv.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <netinet/in.h>
+#include <sys/wait.h>
+#include <sys/sysctl.h>
 #include <arpa/inet.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
-#include <errno.h>
+#include <pthread.h>
+#include <unistd.h>
 
-#define BUFFER_SZ 256   /*Tamaño de buffer*/
+#define MAXLINE 255 /*Longitud máxima de mensaje*/
 
-int sock_client(){
-	  struct sockaddr_in serv_addr;
-    int s, rc;
+void print_instructions();
 
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(7500);
-    serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-
-    // Si sock < 0 hay un error en la creación del socket:
-    s = socket( AF_INET, SOCK_STREAM, 0 );
-    if (s < 0){
-      perror("Problema creando el socket");
-      exit(1);
-    }
-
-    // Conexión del cliente al servidor:
-    rc = connect(s, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
-    if (rc){
-      perror("Problema al intentar la conexión con el servidor");
-      exit(1);
-    }
-
-    return s;
-}
-
-void recv_file(int sock, char *filename){
-		// Recibimos paquetes:
-    char buffer[BUFFER_SZ];
-		int rc;
-		FILE *f;
-		f = fopen(filename, "w");
-
-		rc = recv(sock, buffer, sizeof(buffer), 0);
-		while (rc){
-			fprintf(f, "%s", buffer);
-			bzero(buffer, BUFFER_SZ);
-			rc = read(sock, buffer, BUFFER_SZ);
-		}
-		fclose(f);
-
-		printf("The file was received successfully!\n\n");
+void print_instructions(){
+	printf("=== Instrucciones ===\n");
+	printf("here \t\t- Imprime dirección actual.\n");
+	printf("clear \t\t- Limpia pantalla.\n");
+	printf("ls \t\t- Enlista archivos en la dirección actual.\n");
+	printf("more <filename> - Imprime contenido del archivo.\n");
+	printf("get <filename> \t- Descarga <filename> de la dirección actual.\n");
+	printf("cd <path> \t- Cambia dirección actual a <path>.\n");
+	printf("exit \t\t- Termina el programa del lado del cliente.\n");
+	printf("\n");
 }
 
 int main(int argc, char **argv)
 {
-    int sock = 0, rc, n = 0;
-		char opt;
-    char buffer[BUFFER_SZ];
-		char filename[BUFFER_SZ];
-    FILE *f;
+		int sockfd;
+		int n = 0;
+		struct sockaddr_in servaddr;
+		char recvline[MAXLINE];
+		char line[MAXLINE];
+
+		// Creación del socket:
+		memset(&servaddr, 0, sizeof(servaddr));
+		servaddr.sin_family = AF_INET;
+		servaddr.sin_addr.s_addr= inet_addr("127.0.0.1");
+		servaddr.sin_port = htons(7500);
 
     // Inicio
     printf("=== CLIENT ===\n");
-    printf("Receptor de archivos.\n");
+		print_instructions();
 
-
-    // Creamos el socket:
-		sock = sock_client();
-		printf("Menu:  \n");
-		printf("1. Desargar archivo \n");
-		printf("2. Introducir comando del sistema \n");
-		printf("3. Salir \n\n");
-
-    // Ciclo de control:
 		while (1) {
-			printf("Opción: ");
-			scanf("%c", &opt);
-			rc = send(sock, &opt, 1, 0);
+				// Si sockfd<0 hay un error en la creación del socket.
+				if ((sockfd = socket (AF_INET, SOCK_STREAM, 0)) < 0) {
+						perror("Problema creando el Socket.");
+						exit(2);
+				}
 
-			opt = (int) opt;
-			if (opt == 49) {
-				recv_file(sock, "new.txt");
-				break;
-			}
-			if (opt == 50) {
-				printf("Inroduce comando: \n");
-				scanf("%s", &buffer);
-				// printf("%s\n", buffer);
-				send(sock, buffer, BUFFER_SZ, 0);
-				system(buffer);
-			}
-			if (opt == 51) {
-				break;
-			}
+				// Conexión del clinte al socket del servidor:
+				if (connect(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr)) < 0)
+				{
+						perror("Problema al intentar la conexión con el servidor");
+						exit(3);
+				}
+
+				// Introducimos comando:
+				bzero(recvline, MAXLINE);
+				bzero(line, MAXLINE);
+				printf("Introduce comando: ");
+			  fgets(recvline, MAXLINE, stdin);
+				strcpy(line, &recvline[0]);
+				line[3] = '\0';
+
+				// Le escribimos al servidor a través del socket:
+				n = write(sockfd, recvline, strlen(recvline));
+				if (n < 0) {
+			      perror("ERROR: No se pudo enviar al socket.");
+			      exit(4);
+			  }
+
+				// Si escribimos 'exit', salimos:
+    		if (strcmp(recvline, "exit\n") == 0){
+	    			printf("Bye.\n");
+	    			break;
+    		}
+
+				// Si escribimos 'clear':
+    		if (strcmp(recvline, "clear\n") == 0){
+						system("clear");
+						print_instructions();
+    		}
+
+				// Si escribimos 'ls':
+    		else if (strncmp(recvline, "ls", 2) == 0){
+						bzero(recvline, MAXLINE);
+						while ((n = read(sockfd, recvline, MAXLINE)) > 0){
+								printf("%s", recvline);
+								bzero(recvline, MAXLINE);
+						}
+						printf("\n");
+    		}
+
+				// Si escribimos 'here':
+				else if (strcmp(recvline, "here\n") == 0){
+						bzero(recvline,MAXLINE);
+						n = read(sockfd, recvline, MAXLINE);
+						if (n < 0) {
+								perror("ERROR al leer del socket.");
+								exit(1);
+						}
+						printf("%s\n\n", recvline);
+    		}
+
+				// Si escribimos 'get':
+				else if (strncmp(recvline, "get", 3) == 0){
+						FILE *f;
+						// f = fopen(recvline, "w");
+						f = fopen("recvline.txt", "w");
+						printf("Archivo descargado: %s\n", &(recvline[4]));
+
+						// Imprimimos la respuesta del servidor:
+						bzero(recvline, MAXLINE);
+						n = read(sockfd, recvline, MAXLINE);
+						if (n < 0) {
+								perror("ERROR al leer del socket.");
+								exit(1);
+						}
+						// printf("File opened: %s\n", recvline);
+						bzero(recvline, MAXLINE);
+						while ((n = read(sockfd, recvline, MAXLINE)) > 0){
+								fprintf(f, "%s", recvline);
+								bzero(recvline,MAXLINE);
+						}
+						fclose(f);
+    		}
+
+				// Si los primeros 3 caracteres son 'cd ':
+    		else if (strcmp(line, "cd ") == 0){
+						bzero(recvline, MAXLINE);
+						n = read(sockfd, recvline, MAXLINE);
+						if (n < 0) {
+                perror("ERROR al leer del socket.");
+                exit(1);
+            }
+						printf("Nuevo directorio: %s\n", recvline);
+    		}
+
+				// Si escribimos 'more':
+    		else if (strncmp(recvline, "more", 4) == 0){
+						// Imprimimos la respuesta del servidor:
+						bzero(recvline, MAXLINE);
+						n = read(sockfd, recvline, MAXLINE);
+						if (n < 0) {
+                perror("ERROR al leer del socket.");
+                exit(1);
+            }
+						printf("File opened: %s\n", recvline);
+					 	bzero(recvline, MAXLINE);
+						while ((n = read(sockfd, recvline, MAXLINE)) > 0){
+								printf("%s", recvline);
+								bzero(recvline,MAXLINE);
+						}
+						printf("\n");
+    		}
 		}
-
-    // Cerramos socket:
-		close(sock);
-		printf("Gracias por usar este servicio.\n");
-		return 0;
+		exit(0);
 }
