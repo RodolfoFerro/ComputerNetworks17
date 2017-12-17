@@ -38,13 +38,17 @@ int main(int argc, char **argv)
       perror("Error en bind");
       exit(1);
     }
+    cli_len = sizeof(cli_addr);
+
+    // Verificamos conexión:
+    if ((rc = recvfrom(sock, buffer, 256, 0, (struct sockaddr *)&cli_addr, &cli_len)) < 0){
+       perror("Error al intentar conectar ");
+       exit(1);
+    }
 
     // Enviamos paquetes:
-    memset(buffer, 'X', BUFFER_SZ);
-    buffer[BUFFER_SZ-1]='\0';
-    int i;
-    for (i=0; i<10000; i++){
-      rc = sendto(sock, buffer, strlen(buffer), 0, (struct sockaddr *)&cli_addr,sizeof(cli_addr));
+    for (int i=0; i<10000; i++){
+      rc = sendto(sock, buffer, strlen(buffer), 0, (struct sockaddr *)&cli_addr, cli_len);
       if (rc < 0){
         perror("Error al enviar paquetes");
         exit(1);

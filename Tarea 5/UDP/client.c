@@ -37,21 +37,29 @@ int main(int argc, char **argv)
 		}
 
     // Creación del socket
-  	memset(&serv_addr, 0, sizeof(serv_addr));
   	serv_addr.sin_family = AF_INET;
   	serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
   	serv_addr.sin_port = htons(7500);
 
+    // Verificamos conexión:
+    memset(buffer, 'X', 256);
+    if ((rc = sendto(sock, buffer, strlen(buffer), 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr))) < 0){
+       perror("Error al intentar conectar");
+       exit(1);
+    }
+
     // Recepción de paquetes:
     t_i = clock();
-    while (1){
+    while (1) {
  	    rc = recvfrom(sock, buffer, strlen(buffer), 0, (struct sockaddr *)&serv_addr, &len);
  	    if (rc < 0){
         perror("Problema al recibir paquetes del servidor");
         exit(1);
  		  }
- 	    if (rc == 0) break;
- 	    if (rc > 0) n++;
+ 	    if (rc == 0)
+        break;
+ 	    if (rc > 0)
+        n++;
     }
 
     // Medimos tiempo y transferencia:
