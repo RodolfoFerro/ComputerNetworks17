@@ -41,7 +41,7 @@ int main(int argc, char **argv)
 
     // Enviamos paquetes:
     memset(buffer, 'X', BUFFER_SZ);
-    buf[BUFFER_SZ-1]='\0';
+    buffer[BUFFER_SZ-1]='\0';
     int i;
     for (i=0; i<10000; i++){
       rc = sendto(sock, buffer, strlen(buffer), 0, (struct sockaddr *)&cli_addr,sizeof(cli_addr));
