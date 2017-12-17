@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
         }
 
         // Creamos un subproceso:
-        if ((cpid = fork()) == 0){
+        // if ((cpid = fork()) == 0){
             // Leemos a través del socket:
             bzero(buffer, MAXLINE);
             n = read(connfd, buffer, MAXLINE);
@@ -98,6 +98,9 @@ int main(int argc, char *argv[])
 
             // Si recibimos "here" - Mostramos directorio actual:
             else if (strcmp(buffer, "here\n") == 0){
+                if (getcwd(cwd, sizeof(cwd)) == NULL)
+                    perror("ERROR al obtener directorio");
+                strcpy(dir, cwd);
                 n = write(connfd, dir, strlen(dir));
                 if (n < 0) {
                     perror("ERROR al enviar al socket");
@@ -150,21 +153,23 @@ int main(int argc, char *argv[])
 
             // Si recibimos "cd dir" - Cambiamos directorio:
             else if (strcmp(line, "cd ") == 0){
-    				    // bzero(new_path,MAXLINE);
-    						// strcat(new_path, &(buffer[3]));
-                // new_path[strlen(new_path) - 1] = '\0';
-                // setPath(dir, new_path);
-                chdir(&(buffer[3]));
-                chroot(&(buffer[3]));
-                if (getcwd(cwd, sizeof(cwd)) == NULL)
-                    perror("ERROR al obtener directorio");
-                strcpy(dir, cwd);
+                buffer[strlen(buffer)-1] = '\0';
+                int ch = chdir(&(buffer[3]));
+                if (ch == -1) {
+                    perror("Error en chdir");
+                }
+                // printf("Nuevo directorio: %s\n", &(buffer[3]));
+
+                if (getcwd(dir, MAXLINE) == NULL) {
+                    perror("Error en getdir");
+                    exit(2);
+                }
     						n = write(connfd, dir, strlen(dir));
     						if (n < 0) {
     					      perror("ERROR al enviar al socket.");
     					      exit(4);
     					  }
-                printf("New dir: %s", dir);
+                // printf("New dir: %s", dir);
         		}
 
             // Si recibimos "more" - Abrimos archivo:
@@ -209,7 +214,7 @@ int main(int argc, char *argv[])
                     fclose(ptr_file);
                 }
         		}
-        }
+        // }
 
         // Proceso padre:
         close(connfd);

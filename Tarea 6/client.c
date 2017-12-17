@@ -114,7 +114,8 @@ int main(int argc, char **argv)
 				else if (strncmp(recvline, "get", 3) == 0){
 						FILE *f;
 						// f = fopen(recvline, "w");
-						f = fopen("recvline.txt", "w");
+						recvline[strlen(recvline)-1] = '\0';
+						f = fopen(&(recvline[4]), "w");
 						printf("Archivo descargado: %s\n", &(recvline[4]));
 
 						// Imprimimos la respuesta del servidor:
@@ -141,7 +142,7 @@ int main(int argc, char **argv)
                 perror("ERROR al leer del socket.");
                 exit(1);
             }
-						printf("Nuevo directorio: %s\n", recvline);
+						printf("Nuevo directorio: %s\n\n", recvline);
     		}
 
 				// Si escribimos 'more':
