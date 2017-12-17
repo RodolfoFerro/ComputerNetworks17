@@ -38,7 +38,7 @@ int main(int argc, char **argv)
 
     // Creación del socket
   	serv_addr.sin_family = AF_INET;
-  	serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+  	serv_addr.sin_addr.s_addr = inet_addr(server_address);
   	serv_addr.sin_port = htons(7500);
 
     // Verificamos conexión:
