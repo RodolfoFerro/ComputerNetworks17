@@ -15,7 +15,7 @@ void lee_clientes(int sock){
   char buffer[MAXLINE], user[MAXLINE];
   int rc;
 
-  while(1) {
+  while (1) {
     // Recibimos usuario y mensaje:
     bzero(buffer, MAXLINE);
     bzero(user, MAXLINE);
