@@ -9,7 +9,7 @@
 #include <errno.h>
 
 #define PACK_SIZE 1440 /*Tamaño de paquetes*/
-#define BUFFER_SZ 256   /*Tamaño de buffer*/
+#define BUFFER_SZ 5000*1024   /*Tamaño de buffer*/
 
 int main(int argc, char **argv)
 {
