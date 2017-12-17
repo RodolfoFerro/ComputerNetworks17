@@ -15,21 +15,21 @@ Dichos resultados se encuentran distribuidos en las siguientes tablas:
 |                 |              |           TCP           |        TCP       |           UDP           |        UDP       |            UDP             |     UDP    |
 | --------------- | ------------ | ----------------------- | ---------------- | ----------------------- | ---------------- | -------------------------- | ---------- |
 | **Tam. buffer** | **Servidor** | **Tiempo de ejecución** | **Megabits/seg** | **Tiempo de ejecución** | **Megabits/seg** | **Paquetes perdidos (PP)** | **PP (%)** |
-| *default* (256) | *localhost*  | 0.016939 seg            | 830184.780684    | X                       | X                | X                          |            |
+| *default* (256) | *localhost*  | 0.016939 seg            | 830184.780684    | 0.036986 seg            | 380211.431352    | 0                          | 0.00 %     |
 | *default* (256) | Red local    | 0.029357 seg            | 479016.929523    | X                       | X                | X                          |            |
 
 
 |                 |              |           TCP           |        TCP       |           UDP           |        UDP       |            UDP             |     UDP    |
 | --------------- | ------------ | ----------------------- | ---------------- | ----------------------- | ---------------- | -------------------------- | ---------- |
 | **Tam. buffer** | **Servidor** | **Tiempo de ejecución** | **Megabits/seg** | **Tiempo de ejecución** | **Megabits/seg** | **Paquetes perdidos (PP)** | **PP (%)** |
-| 32*1024 bytes   | *localhost*  | 0.069634 seg            | 202009.986103    | X                       | X                | X                          |            |
+| 32*1024 bytes   | *localhost*  | 0.069634 seg            | 202009.986103    | 0.030384 seg            | 409554.576422    | 1151                       | 11.51 %    |
 | 32*1024 bytes   | Red local    | 0.323525 seg            | 43466.501816     | X                       | X                | X                          |            |
 
 
 |                 |              |           TCP           |        TCP       |           UDP           |        UDP       |            UDP             |     UDP    |
 | --------------- | ------------ | ----------------------- | ---------------- | ----------------------- | ---------------- | -------------------------- | ---------- |
 | **Tam. buffer** | **Servidor** | **Tiempo de ejecución** | **Megabits/seg** | **Tiempo de ejecución** | **Megabits/seg** | **Paquetes perdidos (PP)** | **PP (%)** |
-| 5000*1024 bytes | *localhost*  | 0.151377 seg            | 93803.343695     | X                       | X                | X                          |            |
+| 5000*1024 bytes | *localhost*  | 0.151377 seg            | 93803.343695     | 0.037129 seg            | 378747.071023    | 1061                       | 10.61 %     |
 | 5000*1024 bytes | Red local    | 0.332280 seg            | 42321.235103     | X                       | X                | X                          |            |
 
 
