@@ -125,7 +125,7 @@ Para reiniciar el bot (tras haber modificado el estado del LED) basta volver al 
 Ya que la Alexa Skill se encuentra en línea, puede probarse directamente con los dispositivos [Echo](https://www.amazon.com/dp/B01DFKC2SO/ref=ods_xs_dp_oop) de Amazon (Dot, Plus, etc.) o utilizando el servicio de [Echosim.io](https://echosim.io/).
 
 El comando para invocar al bot es:
-> ––*Alexa, open Light Turner, please.*
+> ––*Alexa, open Light Turner please.*
 
 Tras ello, sólo basta resonder si queremos cambiar el estado del LED.
 
