@@ -1,108 +1,111 @@
-#include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/socket.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+#include <stdlib.h>
 #include <unistd.h>
-#include <errno.h>
+#include <arpa/inet.h>
+#include <pthread.h>
 
 #define MAXLINE 255 /*Longitud máxima de mensaje*/
 
-void lee_clientes(int sock);
-void lee_clientes(int sock){
-  char buffer[MAXLINE], user[MAXLINE];
-  int rc;
+struct client_info {
+		int sockno;
+		char ip[INET_ADDRSTRLEN];
+};
 
-  while(1) {
-    // Recibimos usuario y mensaje:
-    bzero(buffer, MAXLINE);
-    bzero(user, MAXLINE);
-    rc = recv(sock, user, MAXLINE, 0);
-    if (rc < 0){
-      printf("Usuario desconectado.\n");
-      exit(1);
-    }
+int clients[100];
+int n = 0;
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
-    rc = recv(sock, buffer, MAXLINE, 0);
-    if (rc < 0){
-      printf("Error recibiendo mensaje.\n");
-      exit(1);
-    }
-    if (rc > 0){
-      // Imprimimos mensaje recibido:
-      printf("Usuario %s dice: %s", user, buffer);
-    }
-
-    // Confirmamos de recibido con ECHO:
-    rc = send(sock, buffer, MAXLINE, 0);
-    if (rc <= 0) perror( "Error en send" );
-  }
-
-  return;
+void sendtoall(char *msg, int curr) {
+		pthread_mutex_lock(&mutex);
+		for(int i = 0; i < n; i++) {
+				if(clients[i] != curr) {
+						if(send(clients[i], msg, strlen(msg), 0) < 0) {
+							perror("Error al enviar");
+							continue;
+						}
+				}
+		}
+		pthread_mutex_unlock(&mutex);
 }
 
-int main(int argc, char **argv)
+void *recvmg(void *sock) {
+		struct client_info cl = *((struct client_info *)sock);
+		char msg[MAXLINE];
+		int len, i, j;
+		while((len = recv(cl.sockno, msg, MAXLINE, 0)) > 0) {
+				msg[len] = '\0';
+				sendtoall(msg, cl.sockno);
+				memset(msg, '\0', sizeof(msg));
+		}
+
+		pthread_mutex_lock(&mutex);
+		printf("%s disconnected\n", cl.ip);
+		// printf("Usuario desconectado.");
+		for(i = 0; i < n; i++) {
+				if(clients[i] == cl.sockno) {
+						j = i;
+						while(j < n-1) {
+								clients[j] = clients[j+1];
+								j++;
+						}
+				}
+		}
+		n--;
+		pthread_mutex_unlock(&mutex);
+}
+
+int main(int argc,char *argv[])
 {
-    int sock = 0, connfd = 0;
-    struct sockaddr_in serv_addr, cli_addr;
-    socklen_t cli_len;
-    int rc, n, status;
-    char buffer[MAXLINE];
-    pid_t pid, wpid;
+		struct sockaddr_in my_addr,their_addr;
+		struct client_info cl;
+		socklen_t their_addr_size;
+		int my_sock, their_sock, portno, len;
+		pthread_t sendt,recvt;
+		char msg[MAXLINE], ip[INET_ADDRSTRLEN];
 
-    // Inicio
-    printf("=== SERVER ===\n");
-    printf("Receptor de mensajes.\n");
+		// Inicio
+		printf("=== SERVER ===\n");
+		printf("Gestor de mensajes.\n");
 
-    // Creamos el socket
-    sock = socket(AF_INET, SOCK_STREAM, 0);
-    memset(&serv_addr, '0', sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    serv_addr.sin_port = htons(7500);
+	  // Creamos socket:
+		my_sock = socket(AF_INET, SOCK_STREAM, 0);
+		memset(my_addr.sin_zero, '\0', sizeof(my_addr.sin_zero));
+		my_addr.sin_family = AF_INET;
+		my_addr.sin_port = htons(7500);
+		my_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+		their_addr_size = sizeof(their_addr);
 
-    rc = bind(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
-    if (rc < 0){
-      perror("Error en bind");
-      exit(1);
-    }
-    rc = listen(sock, 5);
-    if (rc < 0){
-      perror("Error en listen");
-      exit(1);
-    }
-    cli_len = sizeof(cli_addr);
+	  // Hacemos bind
+		if(bind(my_sock, (struct sockaddr *)&my_addr, sizeof(my_addr)) != 0) {
+				perror("Error en bind");
+				exit(1);
+		}
 
-    // Obtenemos e imprimimos PID
-    printf("PID: %u\n\n", getpid());
+	  // Hacemos listen:
+		if(listen(my_sock, 5) != 0) {
+				perror("Error en listen");
+				exit(1);
+		}
 
-    while(1){
-      // Aceptamos conexión
-      connfd = accept(sock, (struct sockaddr*)&cli_addr, &cli_len);
-      if (connfd < 0){
-        perror("Error al aceptar conexión");
-        exit(1);
-      }
-
-      // Hacemos un fork
-      pid = fork();
-      if (pid == (pid_t)-1){
-        close(connfd);
-        printf("Error en fork(): %s\n", strerror(errno));
-        exit(1);
-      }
-      if (pid == 0){
-        close(sock);
-        lee_clientes(connfd);
-        exit(0);
-      }
-      close(connfd);
-    }
-
-    // Cerramos socket:
-    close(connfd);
-    printf("Gracias por usar este servicio.\n");
-   	return 0;
+		while(1) {
+				if((their_sock = accept(my_sock, (struct sockaddr *)&their_addr, &their_addr_size)) < 0) {
+					perror("Error en accept");
+					exit(1);
+				}
+				pthread_mutex_lock(&mutex);
+				inet_ntop(AF_INET, (struct sockaddr *)&their_addr, ip, INET_ADDRSTRLEN);
+				printf("%s connected\n", ip);
+				// printf("Nuevo usuario conectado.");
+				cl.sockno = their_sock;
+				strcpy(cl.ip, ip);
+				clients[n] = their_sock;
+				n++;
+				pthread_create(&recvt, NULL, recvmg, &cl);
+				pthread_mutex_unlock(&mutex);
+		}
+		return 0;
 }

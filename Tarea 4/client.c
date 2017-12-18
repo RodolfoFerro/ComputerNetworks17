@@ -1,84 +1,94 @@
-#include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/socket.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+#include <stdlib.h>
 #include <unistd.h>
-#include <errno.h>
+#include <arpa/inet.h>
+#include <pthread.h>
 
 #define MAXLINE 255 /*Longitud máxima de mensaje*/
 
-int main(int argc, char **argv)
+void *recvmg(void *sock)
 {
-    int sock = 0, connfd = 0;
-    struct sockaddr_in serv_addr;
-    int rc, n;
-    char buffer[MAXLINE];
+		int their_sock = *((int *)sock);
+		char msg[MAXLINE];
+		int len;
+		while((len = recv(their_sock, msg, MAXLINE, 0)) > 0) {
+				msg[len] = '\0';
+				fputs(msg, stdout);
+				memset(msg, '\0', sizeof(msg));
+		}
+}
 
-    // Inicio
+int main(int argc, char *argv[])
+{
+		struct sockaddr_in their_addr;
+		int my_sock, their_sock, their_addr_size;
+		int portno, len;
+		pthread_t sendt, recvt;
+		char msg[MAXLINE], res[MAXLINE];
+		char username[MAXLINE];
+		char ip[INET_ADDRSTRLEN];
+
+    // Inicio:
     printf("=== CLIENT ===\n");
-    printf("Creador de mensajes.\n");
+    printf("Creador de mensajes.\n\n");
 
-    // Obtenemos tty para crear usuario
-    char *tty = ttyname(STDIN_FILENO);
-    char *user;
-    user = &tty[9];
-    // int user = 100*(tty[9] - '0') + 10*(tty[10] - '0') + (tty[11] - '0');
-    printf("Usuario %s.\n\n", user);
-
-    // Si sock < 0 hay un error en la creación del socket:
-		if ((sock = socket(AF_INET, SOCK_STREAM, 0)) <0) {
-			perror("Problema creando el Socket");
-			exit(2);
+    // Guardamos el nombre de usuario:
+		if(argc < 2) {
+				printf("Error, debes introducir tu nombre de usuario.");
+				exit(1);
 		}
+		strcpy(username, argv[1]);
 
-    // Creación del socket
-  	memset(&serv_addr, 0, sizeof(serv_addr));
-  	serv_addr.sin_family = AF_INET;
-  	serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-  	serv_addr.sin_port = htons(7500);
+    // Creamos socket:
+		my_sock = socket(AF_INET, SOCK_STREAM, 0);
+		memset(their_addr.sin_zero, '\0', sizeof(their_addr.sin_zero));
+		their_addr.sin_family = AF_INET;
+		their_addr.sin_port = htons(7500);
+		their_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-    // Conexión del clinte al servidor:
-		if (connect(sock, (struct sockaddr *) &serv_addr, sizeof(serv_addr))<0){
-			perror("Problema al intentar la conexión con el servidor");
-			exit(3);
+    // Establecemos conexión:
+		if(connect(my_sock,(struct sockaddr *)&their_addr,sizeof(their_addr)) < 0) {
+			perror("connection not esatablished");
+			exit(1);
 		}
-    
-    // Ciclo para leer texto:
-    while (1) {
-      // Limpiamos y escribimos un mensaje:
-      bzero(buffer, MAXLINE);
-      printf("Introduce un mensaje: ");
-      fgets(buffer, MAXLINE, stdin);
+		inet_ntop(AF_INET, (struct sockaddr *)&their_addr, ip, INET_ADDRSTRLEN);
 
-      // Enviamos usuario y mensaje:
-      rc = send(sock, user, MAXLINE, 0);
-      rc = send(sock, buffer, MAXLINE, 0);
-      if (rc <= 0) perror( "Error en send" );
+    // Imprimimos estado de conexión:
+		// printf("Connected to %s, start chatting\n\n", ip);
+		printf("Conectado al servidor, puedes comenzar a chatear.\n\n");
+		// printf("Introduce tu mensaje: ");
+		pthread_create(&recvt, NULL, recvmg, &my_sock);
 
-      // Si escribimos 'EXIT', salimos:
-      if (strcmp(buffer, "EXIT\n") == 0) {
-        printf("¡Hasta luego!\n");
-        break;
-      }
+		while(fgets(msg, MAXLINE, stdin) > 0) {
+				// fflush(stdout);
+				strcpy(res, "\n\n");
+				strcpy(res, username);
+				strcat(res, " dice: ");
+				strcat(res, msg);
+				// printf("Introduce tu mensaje: ");
+				// fflush(stdout);
+				len = write(my_sock, res, strlen(res));
+				if(len < 0) {
+						perror("Error al enviar mensaje");
+						exit(1);
+				}
 
-      // Recibimos respuesta del servidor:
-      bzero(buffer, MAXLINE);
-      rc = recv(sock, buffer, MAXLINE, 0);
-      if (rc < 0){
-        printf("Error leyendo buffer.\n");
-        exit(1);
-      }
-      if (rc > 0){
-        // Imprimimos mensaje recibido:
-        printf("ECHO: %s\n", buffer);
-      }
-    }
+	      // Si escribimos 'EXIT', salimos:
+	      if (strcmp(msg, "EXIT\n") == 0) {
+		        printf("\r¡Hasta luego!         \n");
+						close(my_sock);
+		        break;
+	      }
 
-    // Cerramos socket:
-		close(sock);
+				memset(msg, '\0', sizeof(msg));
+				memset(res, '\0', sizeof(res));
+		}
+		pthread_join(recvt, NULL);
+		close(my_sock);
 		printf("Gracias por usar este servicio.\n");
 		return 0;
 }
