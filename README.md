@@ -20,3 +20,5 @@ La idea general del proyecto es el presentar en general lo que es IoT, pasando p
 El contenido completo y a detalle del proyecto se encuentra en la carpeta [Proyecto Final](https://github.com/RodolfoFerro/ComputerNetworks17/tree/master/Proyecto%20Final).
 
 Los slides del proyecto se [encuentran aquí](https://docs.google.com/presentation/d/e/2PACX-1vQIbCPw_yGZAmEdFgncVmxtbFCbr-xSnw3VFKxAV0xMMqyTp6aaM0DTM9IYc84DVQgeeEHraCHMRr1A/pub?start=false&loop=false&delayms=3000).
+
+Más info sobre [Chicago - Array of Things](http://arrayofthings.github.io/).
